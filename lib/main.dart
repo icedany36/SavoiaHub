@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:savoiahub/screens/Projects.dart';
+import 'package:savoiahub/screens/Projects_Screen/projects_screen.dart';
 
 void main() => runApp(const MyApp());
 
@@ -10,10 +9,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of the application
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'SavoiaHub',
-        // theme: ThemeData(fontFamily: GoogleFonts.openSans().fontFamily),
-        home: Projects());
+        home: ProjectsScreen());
   }
 }
