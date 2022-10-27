@@ -1,11 +1,5 @@
-import 'dart:developer';
-import 'dart:ui';
-
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:savoiahub/screens/Projects_Screen/square.dart';
 import 'package:savoiahub/util/project.dart';
-import 'package:cupertino_icons/cupertino_icons.dart';
 import 'package:flutter/cupertino.dart';
 
 class ProjectsScreen extends StatelessWidget {
@@ -38,7 +32,35 @@ class ProjectsScreen extends StatelessWidget {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    int deviceType;
+// Show Page Tools
+    Future<void> _showMyDialog() async {
+      return showDialog<void>(
+        context: context,
+        barrierDismissible: false, // user must tap button!
+        builder: (BuildContext context) {
+          return AlertDialog(
+            /*content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  MaterialButton(onPressed: (() {
+                    print("fine");
+                  }))
+                ],
+              ),
+            ), */
+            actions: <Widget>[
+              MaterialButton(
+                child: Icon(Icons.add),
+                onPressed: () {
+                  //Navigator.of(context).pop();
+                  print("It Works!");
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 49, 49, 49),
@@ -138,7 +160,7 @@ class ProjectsScreen extends StatelessWidget {
         disabledElevation: 0,
         tooltip: 'Tools',
         onPressed: () {
-          // TODO: Add Page Tools
+          _showMyDialog();
         },
       ),
     );
