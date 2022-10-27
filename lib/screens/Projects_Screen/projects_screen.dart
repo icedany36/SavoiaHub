@@ -5,6 +5,8 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:savoiahub/screens/Projects_Screen/square.dart';
 import 'package:savoiahub/util/project.dart';
+import 'package:cupertino_icons/cupertino_icons.dart';
+import 'package:flutter/cupertino.dart';
 
 class ProjectsScreen extends StatelessWidget {
   ProjectsScreen({super.key});
@@ -39,9 +41,10 @@ class ProjectsScreen extends StatelessWidget {
     int deviceType;
 
     return Scaffold(
-      // Navigation Bar
       backgroundColor: const Color.fromARGB(255, 49, 49, 49),
-      bottomNavigationBar: CurvedNavigationBar(
+
+      // Navigation Bar
+      /* bottomNavigationBar: CurvedNavigationBar(
           backgroundColor: const Color.fromARGB(255, 49, 49, 49),
           buttonBackgroundColor: const Color.fromARGB(255, 49, 49, 49),
           color: const Color.fromARGB(255, 29, 29, 29),
@@ -49,7 +52,7 @@ class ProjectsScreen extends StatelessWidget {
             Icon(Icons.home, color: Color.fromARGB(255, 119, 119, 119)),
             Icon(Icons.bubble_chart, color: Color.fromARGB(255, 119, 119, 119)),
             Icon(Icons.person, color: Color.fromARGB(255, 119, 119, 119)),
-          ]),
+          ]), */
 
       body: SingleChildScrollView(
         child: Column(
@@ -129,6 +132,14 @@ class ProjectsScreen extends StatelessWidget {
                 ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(CupertinoIcons.ellipsis_vertical_circle_fill),
+        disabledElevation: 0,
+        tooltip: 'Tools',
+        onPressed: () {
+          // TODO: Add Page Tools
+        },
       ),
     );
   }
