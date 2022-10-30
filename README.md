@@ -1,3 +1,3 @@
-# savoiahub
+# SavoiaHub
 
 High School Project
