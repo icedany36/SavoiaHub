@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:savoiahub/util/project.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:swipe/swipe.dart';
 
 class ProjectsScreen extends StatelessWidget {
   ProjectsScreen({super.key});
@@ -56,6 +57,13 @@ class ProjectsScreen extends StatelessWidget {
                   print("It Works!");
                 },
               ),
+              MaterialButton(
+                child: Icon(Icons.delete),
+                onPressed: () {
+                  //Navigator.of(context).pop();
+                  print("It Works!");
+                },
+              ),
             ],
           );
         },
@@ -77,82 +85,85 @@ class ProjectsScreen extends StatelessWidget {
           ]), */
 
       body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
+        child: Swipe(
+          onSwipeUp: () => _showMyDialog(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
 
-            // Explore the Projects
-            const Padding(
-              padding: EdgeInsets.only(left: 25.0),
-              child: Text(
-                'Explore the School Projects',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 26,
-                    color: Colors.white70),
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  border: null,
-                  borderRadius: BorderRadius.circular(12),
+              // Explore the Projects
+              const Padding(
+                padding: EdgeInsets.only(left: 25.0),
+                child: Text(
+                  'Explore the School Projects',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 26,
+                      color: Colors.white70),
                 ),
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Container(
-                          height: 30,
-                          child: const Icon(Icons.search,
-                              color: Color.fromARGB(255, 49, 49, 49))),
-                    ),
-                    const Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: 'Search a Project',
+              ),
+
+              const SizedBox(height: 25),
+
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    border: null,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: Container(
+                            height: 30,
+                            child: const Icon(Icons.search,
+                                color: Color.fromARGB(255, 49, 49, 49))),
+                      ),
+                      const Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Search a Project',
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 25),
+              const SizedBox(height: 25),
 
-            AspectRatio(
-                aspectRatio: 1,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: GridView.builder(
-                    itemCount: 10,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: gridNumber(screenWidth)),
-                    itemBuilder: ((context, index) {
-                      return Project();
-                    }),
+              AspectRatio(
+                  aspectRatio: 1,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: GridView.builder(
+                      itemCount: 10,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: gridNumber(screenWidth)),
+                      itemBuilder: ((context, index) {
+                        return Project();
+                      }),
+                    ),
+                  )
+
+                  /*ListView.builder(
+                shrinkWrap: true,
+                primary: false,
+                itemCount: posts.length,
+                itemBuilder: (context, index) {
+                  return const ProjectsSquare();
+                },
+              ),*/
                   ),
-                )
-
-                /*ListView.builder(
-              shrinkWrap: true,
-              primary: false,
-              itemCount: posts.length,
-              itemBuilder: (context, index) {
-                return const ProjectsSquare();
-              },
-            ),*/
-                ),
-          ],
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
