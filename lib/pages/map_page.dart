@@ -1,8 +1,21 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
-import 'package:flutter/services.dart';
+import 'package:savoiahub/main.dart';
+import 'package:savoiahub/util/FirstFloorPainter.dart';
+import 'package:savoiahub/util/OutsidePainter.dart';
+import 'package:savoiahub/util/SecondFloorPainter.dart';
+import 'package:savoiahub/util/barExtension.dart';
+import 'package:savoiahub/util/thirdFloorPainter.dart';
 import 'package:swipe/swipe.dart';
+
+String startPoint = "";
+String endPoint = "";
+var valueListenable = ValueNotifier(1);
+
+var controller = TransformationController();
+
+int index = 0;
+
+bool ExtensionIsVisibile = false;
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -12,11 +25,27 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
-  double x = 0.0;
-  double y = 0.0;
+  final mapScaleController = TransformationController();
+  // there is an error if the controller is static
+  static double dx = 0;
+  static double dy = 0;
 
-  late TransformationController controller;
+  bool outdoorisVisible = true;
+
+  List<CustomPainter> painters = [
+    OutsidePainter(),
+    FirstFloorPainter(),
+    SecondFloorPainter(),
+    ThirdFloorPainter(),
+  ];
+
+  static final _key1 = GlobalKey();
+
+  double xCoo = 0.0;
+  double yCoo = 0.0;
+
   TapDownDetails? tapDownDetails;
+  TapDownDetails? tapDownDetails2;
 
   late AnimationController animationController;
   Animation<Matrix4>? animation;
@@ -25,7 +54,18 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    controller = TransformationController();
+    controller.addListener(() {
+      if (controller.value.getMaxScaleOnAxis() > 1) {
+        setState(() {
+          outdoorisVisible = false;
+        });
+      } else {
+        setState(() {
+          outdoorisVisible = true;
+        });
+      }
+    });
+
     animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 300))
       ..addListener(() {
@@ -36,17 +76,17 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   // dispose
   @override
   void dispose() {
-    controller.dispose();
-    animationController.dispose();
-
     super.dispose();
+
+    animationController.removeListener(() {});
+    animationController.dispose();
   }
 
   // update mouse position
   void _updateLocation(PointerEvent details) {
     setState(() {
-      x = details.localPosition.dx;
-      y = details.localPosition.dy;
+      xCoo = details.localPosition.dx;
+      yCoo = details.localPosition.dy;
     });
   }
 
@@ -61,142 +101,400 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     );
   }
 
+  void zoom() {
+    const double scale = 5;
+    final x = -(dx - 20) * (scale - 0.6);
+    final y = -dy * (scale - 1);
+    final zoomed = Matrix4.identity()
+      ..translate(x, y)
+      ..scale(scale);
+
+    final end = controller.value.isIdentity() ? zoomed : Matrix4.identity();
+
+    animation = Matrix4Tween(
+      begin: controller.value,
+      end: end,
+    ).animate(
+      CurveTween(curve: Curves.easeOut).animate(animationController),
+    );
+
+    animationController.forward(from: 0.0);
+  }
+
   Widget buildImage(final displayWidth, final displayHeight) => MouseRegion(
         onHover: _updateLocation,
         child: GestureDetector(
+          onTap: () {
+            if (ExtensionIsVisibile) ExtensionIsVisibile = false;
+          },
           onDoubleTapDown: (details) => tapDownDetails = details,
           onDoubleTap: () {
             final position = tapDownDetails!.localPosition;
-
-            const double scale = 8;
-            final x = -position.dx * (scale - 1);
-            final y = -position.dy * (scale - 1);
-            final zoomed = Matrix4.identity()
-              ..translate(x, y)
-              ..scale(scale);
-
-            final end =
-                controller.value.isIdentity() ? zoomed : Matrix4.identity();
-
-            animation = Matrix4Tween(
-              begin: controller.value,
-              end: end,
-            ).animate(
-              CurveTween(curve: Curves.easeOut).animate(animationController),
-            );
-
-            animationController.forward(from: 0);
+            setState(() {
+              dx = position.dx;
+              dy = position.dy;
+            });
+            zoom();
           },
-          child: InteractiveViewer(
-            clipBehavior: Clip.none, // to show the image in fullscreen
-            minScale: 1,
-            maxScale: 6,
-            transformationController: controller,
-            child: SafeArea(
-              child: Stack(
-                children: [
-                  Center(
+          child: Stack(
+            children: [
+              InteractiveViewer(
+                // modified it OverflowBox: (alignment: Alignment.left to Alignment.center)
+                boundaryMargin: const EdgeInsets.only(
+                    left: 15,
+                    right:
+                        -50), // attivarlo per usare lo zoom di default e modificare solo 'left'
+                constrained: false,
+                clipBehavior: Clip.none, // to show the image in fullscreen
+                minScale: 1,
+                maxScale: 10,
+                transformationController: controller,
+                child: Center(
+                  child: SizedBox(
+                    height: displayHeight,
+                    width: displayWidth +
+                        120, // per lo zoom, aggiungere come addendo quello che si e' messo sopra, al 'left'
                     child: FittedBox(
-                      child: RepaintBoundary(
-                        child: CustomPaint(
-                          size: Size(displayWidth, displayWidth * 0.6),
-                          painter: ImagePainter(),
+                      child: Transform.translate(
+                        offset: const Offset(-20, 0),
+                        child: RepaintBoundary(
+                          child: Stack(
+                            children: [
+                              Visibility(
+                                visible: outdoorisVisible,
+                                child: CustomPaint(
+                                  size: Size(displayWidth, displayWidth * 0.75),
+                                  painter: OutsidePainter(),
+                                ),
+                              ),
+                              ValueListenableBuilder(
+                                valueListenable: valueListenable,
+                                builder: (context, n, c) {
+                                  return GestureDetector(
+                                    onTapDown: (details) =>
+                                        tapDownDetails2 = details,
+                                    onTap: () {
+                                      final position2 =
+                                          tapDownDetails2!.localPosition;
+                                      if ((position2.dx >=
+                                                  displayWidth * 0.3217875 &&
+                                              position2.dx <=
+                                                  displayWidth * 0.3625000) &&
+                                          (position2.dy >=
+                                                  (displayWidth * 0.75) *
+                                                      0.2269833 &&
+                                              position2.dy <=
+                                                  (displayWidth * 0.75) *
+                                                      0.2846833)) {
+                                        setState(() {
+                                          FirstFloorPainter.room.insert(
+                                              29,
+                                              Paint()
+                                                ..color = Color.fromARGB(
+                                                    255, 76, 0, 255)
+                                                ..style = PaintingStyle.fill);
+                                        });
+                                      }
+                                    },
+                                    child: CustomPaint(
+                                      key: _key1,
+                                      size: Size(
+                                          displayWidth, displayWidth * 0.75),
+                                      painter: painters[n],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                  Text(
-                    '($displayWidth, $displayHeight) ($x, $y)',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ],
+                ),
               ),
-            ),
+              SafeArea(
+                child: Text(
+                  '($displayWidth, $displayHeight) ($xCoo, $yCoo)',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+              Visibility(
+                visible: ExtensionIsVisibile,
+                child: Swipe(
+                  onSwipeDown: () => ExtensionIsVisibile = false,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                          bottom: 50,
+                          left: MediaQuery.of(context).size.width / 5,
+                          right: MediaQuery.of(context).size.width / 5),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(30),
+                        ),
+                        child: SizedBox(
+                          height: 200,
+                          child: Container(
+                            color: Colors.black,
+                            child: Column(
+                              children: [
+                                OutlinedButton(
+                                  onPressed: () {
+                                    setState(
+                                      () {
+                                        ExtensionIsVisibile = false;
+                                      },
+                                    );
+                                  },
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    OutlinedButton(
+                                      onPressed: () async {
+                                        startPoint = await showSearch(
+                                          context: context,
+                                          delegate: CustomSearchDelegate(),
+                                        );
+                                      },
+                                      child: const Icon(
+                                        Icons.abc,
+                                        color: Colors.white,
+                                        size: 40,
+                                      ),
+                                    ),
+                                    Text(startPoint,
+                                        style: TextStyle(color: Colors.white)),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    OutlinedButton(
+                                      onPressed: () async {
+                                        endPoint = await showSearch(
+                                          context: context,
+                                          delegate: CustomSearchDelegate(),
+                                        );
+                                      },
+                                      child: const Icon(
+                                        Icons.abc,
+                                        color: Colors.white,
+                                        size: 40,
+                                      ),
+                                    ),
+                                    Text(endPoint,
+                                        style: TextStyle(color: Colors.white)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );
 }
 
-class ImagePainter extends CustomPainter {
-  ImagePainter();
+class CustomSearchDelegate extends SearchDelegate {
+  final searchTerms = [
+    'Test1',
+    'Test2',
+    'Test3',
+    'Aula LSI',
+    'Aula 30',
+  ];
+
+  final recentSearchTerms = ['Test3'];
 
   @override
-  void paint(Canvas canvas, Size size) {
-    print('Starting to draw...');
-
-    final paint = Paint()
-      ..color = Color.fromARGB(255, 101, 123, 131)
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 3;
-
-    Path path0 = Path();
-    path0.moveTo(size.width * 0.1046000, size.height * (1 / 3));
-    path0.lineTo(size.width * 0.1046000, size.height * 0.4206714);
-    path0.lineTo(size.width * 0.1181118, size.height * 0.4206714);
-    path0.lineTo(size.width * 0.1181118, size.height * 0.7578857);
-    path0.lineTo(size.width * 0.0320882, size.height * 0.7578857);
-    path0.lineTo(size.width * 0.0320882, size.height * 0.7988857);
-    path0.lineTo(size.width * 0.3507353, size.height * 0.8071143);
-    path0.lineTo(size.width * 0.3507353, size.height * 0.9259286);
-    path0.lineTo(size.width * 0.4957412, size.height * 0.9259286);
-    path0.lineTo(size.width * 0.4940059, size.height * 0.8071143);
-    path0.lineTo(size.width * 0.4164824, size.height * 0.8071143);
-    path0.lineTo(size.width * 0.4148471, size.height * 0.7374429);
-    path0.lineTo(size.width * 0.7283353, size.height * 0.7414571);
-    path0.lineTo(size.width * 0.7280765, size.height * 0.7254571);
-    path0.lineTo(size.width * 0.7806588, size.height * 0.7252000);
-    path0.lineTo(size.width * 0.7806588, size.height * 0.6883000);
-    path0.lineTo(size.width * 0.6476059, size.height * 0.6888143);
-    path0.lineTo(size.width * 0.6474882, size.height * 0.5205429);
-    path0.lineTo(size.width * 0.7687353, size.height * 0.5212857);
-    path0.lineTo(size.width * 0.7688059, size.height * 0.4285857);
-    path0.lineTo(size.width * 0.8598706, size.height * 0.4303429);
-    path0.lineTo(size.width * 0.8598706, size.height * 0.3073429);
-    path0.lineTo(size.width * 0.9424824, size.height * 0.3073429);
-    path0.lineTo(size.width * 0.9424824, size.height * 0.3567429);
-    path0.lineTo(size.width * 0.9745176, size.height * 0.3567429);
-    path0.lineTo(size.width * 0.9740059, size.height * 0.2563571);
-    path0.lineTo(size.width * 0.8598706, size.height * 0.2543429);
-    path0.lineTo(size.width * 0.8598706, size.height * 0.0661000);
-    path0.lineTo(size.width * 0.8134412, size.height * 0.0647714);
-    path0.lineTo(size.width * 0.8126353, size.height * 0.3813714);
-    path0.lineTo(size.width * 0.7317941, size.height * 0.3773714);
-    path0.lineTo(size.width * 0.7317941, size.height * 0.4466857);
-    path0.lineTo(size.width * 0.6139824, size.height * 0.4437571);
-    path0.lineTo(size.width * 0.6137412, size.height * 0.6883000);
-    path0.lineTo(size.width * 0.3490647, size.height * 0.6842429);
-    path0.lineTo(size.width * 0.3489471, size.height * 0.7651714);
-    path0.lineTo(size.width * 0.1388647, size.height * 0.7609286);
-    path0.lineTo(size.width * 0.1400235, size.height * 0.4201857);
-    path0.lineTo(size.width * 0.2512529, size.height * 0.4261429);
-    path0.lineTo(size.width * 0.2512529, size.height * 0.3894429);
-    path0.lineTo(size.width * 0.2732412, size.height * 0.3894429);
-    path0.lineTo(size.width * 0.2732412, size.height * 0.3322429);
-    path0.lineTo(size.width * 0.3785294, size.height * 0.3361571);
-    path0.lineTo(size.width * 0.3787941, size.height * 0.2913143);
-    path0.lineTo(size.width * 0.2568647, size.height * 0.2898714);
-    path0.lineTo(size.width * 0.2571706, size.height * 0.3465714);
-    path0.lineTo(size.width * 0.2054824, size.height * 0.3466714);
-    path0.lineTo(size.width * 0.2056941, size.height * 0.3811571);
-    path0.lineTo(size.width * 0.2007353, size.height * 0.3813714);
-    path0.lineTo(size.width * 0.2007353, size.height * 0.2668143);
-    path0.lineTo(size.width * 0.1871824, size.height * 0.2668143);
-    path0.lineTo(size.width * 0.1871824, size.height * 0.1724000);
-    path0.lineTo(size.width * 0.1669824, size.height * 0.1721571);
-    path0.lineTo(size.width * 0.1669824, size.height * 0.2661286);
-    path0.lineTo(size.width * 0.1535412, size.height * 0.2668143);
-    path0.lineTo(size.width * 0.1536353, size.height * 0.3640143);
-    path0.lineTo(size.width * 0.1888824, size.height * 0.3649143);
-    path0.lineTo(size.width * 0.1888824, size.height * 0.3793571);
-    path0.lineTo(size.width * 0.1492824, size.height * 0.3774143);
-    path0.lineTo(size.width * 0.1488294, size.height * 0.3445000);
-    path0.lineTo(size.width * 0.1046000, size.height * 0.3445000);
-    path0.quadraticBezierTo(30, 0, 0, 30);
-    path0.close();
-
-    canvas.drawPath(path0, paint);
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          if (query.isEmpty) {
+            close(context, null);
+          } else {
+            query = '';
+          }
+        },
+      ),
+    ];
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    List<String> suggestions = [];
+    for (var term in searchTerms) {
+      if (term.toLowerCase().contains(query.toLowerCase())) {
+        suggestions.add(term);
+      }
+    }
+    return ListView.builder(
+      itemCount: suggestions.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(
+            suggestions[index],
+            style: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          onTap: () {
+            close(context, searchTerms[index]);
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final suggestions = query.isEmpty
+        ? recentSearchTerms
+        : searchTerms.where((searchTerm) {
+            final termLower = searchTerm.toLowerCase();
+            final queryLower = query.toLowerCase();
+
+            return termLower.startsWith(queryLower);
+          }).toList();
+
+    return buildSuggestionsSuccess(suggestions);
+  }
+
+  Widget buildSuggestionsSuccess(List<String> suggestions) => ListView.builder(
+        itemCount: suggestions.length,
+        itemBuilder: (context, index) {
+          final suggestion = suggestions[index];
+          final queryText = suggestion.substring(0, query.length);
+          final remainingText = suggestion.substring(query.length);
+          return ListTile(
+            onTap: () {
+              query = suggestion;
+
+              close(context, suggestion);
+            },
+            title: RichText(
+              text: TextSpan(
+                text: queryText,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+                children: [
+                  TextSpan(
+                    text: remainingText,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+}
+
+MapToolsController(int index, BuildContext context) async {
+  switch (index) {
+    case 0:
+      var results = await showSearch(
+        context: context,
+        delegate: CustomSearchDelegate(),
+      );
+      switch (results) {
+        case 'Aula LSI':
+          /* double wow = _MapPageState._key1.currentContext!.size!.width;
+
+          // for room zoom in
+          controller.value = Matrix4.identity()
+            ..scale(5)
+            ..translate(
+                (-(((wow * 0.2112500)) *
+                            ((MediaQuery.of(context).size.width + 85) / wow)) /
+                        5) -
+                    30,
+                -(((wow * 0.75) * 0.2583333) *
+                        (MediaQuery.of(context).size.height / wow)) *
+                    (5 - 1)); */
+
+          for (int i = 0; i < 100; i++) {
+            FirstFloorPainter.room.insert(
+                i,
+                Paint()
+                  ..color = Color.fromARGB(255, 53, 53, 53)
+                  ..style = PaintingStyle.fill);
+          }
+          FirstFloorPainter.room.insert(
+              29,
+              Paint()
+                ..color = Color.fromARGB(255, 76, 0, 255)
+                ..style = PaintingStyle.fill);
+
+          ExtensionIsVisibile = true;
+          startPoint = results;
+
+          break;
+
+        case 'Aula 30':
+          print('lalalalala');
+          ExtensionIsVisibile = true;
+          startPoint = results;
+          break;
+
+        default:
+          print("Nothing");
+      }
+
+      break;
+
+    case 1:
+      valueListenable.value = 1;
+      break;
+
+    case 2:
+      valueListenable.value = 2;
+      /*Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const MapPage(),
+        ), 
+      ); */
+
+      break;
+
+    case 3:
+      valueListenable.value = 3;
+      break;
+
+    default:
+      print("ERROR TOOLS CONTROLLER");
+  }
 }

@@ -1,12 +1,12 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:savoiahub/pages/Projects_Screen/projects_screen.dart';
+import 'package:savoiahub/pages/projects_page.dart';
 import 'package:savoiahub/pages/map_page.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:swipe/swipe.dart';
 
 void main() => runApp(const MainPage());
+
+final controller = PageController(initialPage: 1);
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -16,15 +16,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
-  final controller = PageController(initialPage: 0);
   TabController? controller2;
-  int selectWidget = 0;
-
-  void changeWidget(int index) {
-    setState(() {
-      selectWidget = index;
-    });
-  }
 
   @override
   void initState() {
@@ -41,8 +33,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final displayWidth;
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Home(controller),
@@ -50,21 +40,28 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   }
 }
 
-class Home extends StatelessWidget {
-  Home(PageController controller, {super.key});
+class Home extends StatefulWidget {
+  const Home(PageController controller, {super.key});
 
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> with TickerProviderStateMixin {
   int _currentIndex = 0;
-  List<IconData> data = [
-    Icons.search,
-    Icons.edit,
-    Icons.add,
-  ];
+  var animationController;
+  late Animation<double> animation;
 
-  List<Color> dotColors = const [
-    Color.fromARGB(255, 211, 1, 2),
-    Color.fromARGB(255, 133, 153, 0),
-    Color.fromARGB(255, 38, 139, 210),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    animationController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 3));
+
+    animation = Tween(begin: 3.0, end: 0.0).animate(animationController);
+
+    animationController.forward();
+  }
 
   List<BottomNavigationBarItem> testtt = [
     const BottomNavigationBarItem(
@@ -79,7 +76,7 @@ class Home extends StatelessWidget {
     ),
   ];
 
-  final controller = PageController();
+  var controller = PageController();
 
   @override
   Widget build(BuildContext context) {
@@ -88,23 +85,38 @@ class Home extends StatelessWidget {
       extendBody: true,
       // TODO: theme instead of backgroundColor
       bottomNavigationBar: Swipe(
-        onSwipeLeft: () {
-          _currentIndex += 1;
+        onSwipeLeft: () async {
+          ExtensionIsVisibile = false;
+
           controller.nextPage(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut);
+
+          await Future.delayed(const Duration(milliseconds: 150));
+
+          setState(() {
+            _currentIndex += 1;
+          });
+          animationController.forward(from: 0.0);
         },
-        onSwipeRight: () {
-          _currentIndex -= 1;
+        onSwipeRight: () async {
           controller.previousPage(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut);
+
+          await Future.delayed(const Duration(milliseconds: 150));
+
+          setState(() {
+            _currentIndex -= 1;
+            animation = animation;
+          });
+          animationController.forward(from: 0.0);
         },
         child: Padding(
           padding: EdgeInsets.only(
               bottom: 30,
-              left: MediaQuery.of(context).size.width / 4,
-              right: MediaQuery.of(context).size.width / 4),
+              left: MediaQuery.of(context).size.width / 5,
+              right: MediaQuery.of(context).size.width / 5),
           child: ClipRRect(
             borderRadius: const BorderRadius.all(
               Radius.circular(30),
@@ -112,24 +124,51 @@ class Home extends StatelessWidget {
             child: SizedBox(
               height: 70,
               child: BottomNavigationBar(
-                selectedItemColor: Colors.grey,
+                type: BottomNavigationBarType.fixed,
+                selectedItemColor: Colors.white,
                 unselectedItemColor: Colors.white,
                 showSelectedLabels: false,
                 showUnselectedLabels: false,
                 backgroundColor: Colors.black,
                 iconSize: 35,
-                onTap: (int index) {},
+                currentIndex: _currentIndex,
+                onTap: (int index) {
+                  switch (_currentIndex) {
+                    case 0:
+                      MapToolsController(index, context);
+                      break;
+
+                    case 1:
+                      break;
+
+                    case 2:
+                      break;
+
+                    case 3:
+                      break;
+
+                    default:
+                  }
+                },
                 items: const [
                   BottomNavigationBarItem(
                     icon: Icon(Icons.search),
-                    backgroundColor: Colors.red,
+                    label: 'test1',
+                    tooltip: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.looks_one),
                     label: 'test2',
                     tooltip: '',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.plus_one),
-                    backgroundColor: Colors.blue,
-                    label: 'test',
+                    icon: Icon(Icons.looks_two),
+                    label: 'test3',
+                    tooltip: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.looks_3),
+                    label: 'test4',
                     tooltip: '',
                   ),
                 ],
@@ -150,28 +189,42 @@ class Home extends StatelessWidget {
               height: 600,
               width: MediaQuery.of(context).size.width,
               color: Colors.transparent,
-            )
+            ),
           ],
         ),
-        SafeArea(
-          child: Container(
-            margin: EdgeInsets.all(20),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: SmoothPageIndicator(
-                controller: controller,
-                count: 3,
-                effect: ExpandingDotsEffect(
-                  activeDotColor: dotColors[_currentIndex],
-                  dotColor: Colors.black,
-                  dotHeight: 25,
-                  dotWidth: 25,
-                ),
-              ),
-            ),
-          ),
-        ),
+        dotIndicator(controller, _currentIndex, animation)
       ]),
     );
   }
+}
+
+Widget dotIndicator(
+    PageController controller, int currentIndex, Animation<double> animation) {
+  List<Color> dotColors = const [
+    Color.fromARGB(255, 211, 1, 2),
+    Color.fromARGB(255, 133, 153, 0),
+    Color.fromARGB(255, 38, 139, 210),
+  ];
+
+  return SafeArea(
+    child: FadeTransition(
+      opacity: animation,
+      child: Container(
+        margin: const EdgeInsets.all(20),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: SmoothPageIndicator(
+            controller: controller,
+            count: 3,
+            effect: ExpandingDotsEffect(
+              activeDotColor: dotColors[currentIndex],
+              dotColor: Colors.white.withOpacity(0.5),
+              dotHeight: 25,
+              dotWidth: 25,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
