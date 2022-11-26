@@ -86,7 +86,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       // TODO: theme instead of backgroundColor
       bottomNavigationBar: Swipe(
         onSwipeLeft: () async {
-          ExtensionIsVisibile = false;
+          valueListenable2.value = false;
 
           controller.nextPage(
               duration: const Duration(milliseconds: 300),
@@ -135,7 +135,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 onTap: (int index) {
                   switch (_currentIndex) {
                     case 0:
-                      MapToolsController(index, context);
+                      mapToolsController(index, context);
                       break;
 
                     case 1:

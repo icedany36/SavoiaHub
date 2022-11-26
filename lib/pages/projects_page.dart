@@ -54,10 +54,9 @@ class ProjectsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
 
 // Show Page Tools
-    Future<void> _showMyDialog() async {
+    Future<void> showMyDialog() async {
       return showDialog<void>(
         context: context,
         barrierDismissible: false, // user must tap button!
@@ -97,7 +96,7 @@ class ProjectsScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: SingleChildScrollView(
         child: Swipe(
-          onSwipeUp: () => _showMyDialog(),
+          onSwipeUp: () => showMyDialog(),
           child: SafeArea(
             child: Column(
               children: [

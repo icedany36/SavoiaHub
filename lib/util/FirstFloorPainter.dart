@@ -5,29 +5,33 @@ class FirstFloorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 99; i++) {
       room.add(Paint()
-        ..color = Color.fromARGB(255, 181, 137, 0)
+        ..color = const Color.fromARGB(255, 181, 137, 0)
         ..style = PaintingStyle.fill);
     }
+
     Paint FFBase = Paint()
-      ..color = Color.fromARGB(255, 228, 218, 184)
-      ..style = PaintingStyle.fill;
+      ..color = const Color.fromARGB(255, 228, 218, 184)
+      ..style = PaintingStyle.fill
+      ..strokeJoin = StrokeJoin.round;
 
     Paint elevator = Paint()
-      ..color = Color.fromARGB(255, 34, 116, 109)
-      ..style = PaintingStyle.fill;
+      ..color = const Color.fromARGB(255, 34, 116, 109)
+      ..style = PaintingStyle.fill
+      ..strokeJoin = StrokeJoin.round;
 
     Paint internalStairs = Paint()
-      ..color = Color.fromARGB(255, 133, 153, 0)
-      ..style = PaintingStyle.fill;
+      ..color = const Color.fromARGB(255, 133, 153, 0)
+      ..style = PaintingStyle.fill
+      ..strokeJoin = StrokeJoin.round;
 
     Paint bar = Paint()
-      ..color = Color.fromARGB(255, 38, 139, 210)
+      ..color = const Color.fromARGB(255, 38, 139, 210)
       ..style = PaintingStyle.fill;
 
     Paint exit = Paint()
-      ..color = Color.fromARGB(255, 211, 1, 2)
+      ..color = const Color.fromARGB(255, 211, 1, 2)
       ..style = PaintingStyle.fill;
 
     Path path13 = Path();
@@ -771,6 +775,6 @@ class FirstFloorPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+    return true;
   }
 }
