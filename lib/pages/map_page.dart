@@ -235,12 +235,12 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                   ),
                 ),
               ),
-              SafeArea(
+              /* SafeArea(
                 child: Text(
                   '($displayWidth, $displayHeight) ($xCoo, $yCoo)',
                   style: const TextStyle(color: Colors.red),
                 ),
-              ),
+              ), */
               ValueListenableBuilder(
                 valueListenable: valueListenable2,
                 builder: (context, value, child) {
