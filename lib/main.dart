@@ -6,7 +6,7 @@ import 'package:swipe/swipe.dart';
 
 void main() => runApp(const MainPage());
 
-final controller = PageController(initialPage: 1);
+final controller = PageController(initialPage: 0);
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
