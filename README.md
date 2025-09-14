@@ -6,6 +6,8 @@ A simple navigator for people who study and work in my old high school. It allow
 The app is designed to work across **multiple floors**, calculating optimal routes that may involve stairs or connecting pathways between levels.  
 I used Google's SDK, **Flutter**, to develop the app.
 
+Realised in a week without prior knowledge of both Flutter and Dart
+
 ### Map
 The map was made using school plans and simplified below.
 
